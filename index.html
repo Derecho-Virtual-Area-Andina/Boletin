@@ -101,7 +101,7 @@ a{color:inherit}
 .item{background:var(--papel);border:1px solid var(--linea);border-top:4px solid var(--acento);border-radius:14px;padding:16px 16px 14px;margin-bottom:12px}
 .item{overflow:hidden}
 .foto{margin:-16px -16px 14px;background:var(--suave)}
-.foto img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.foto img{display:block;width:100%;height:auto;max-height:620px;object-fit:contain;margin:0 auto}
 .foto figcaption{font-size:.78rem;color:var(--tinta-2);padding:6px 16px 0}
 .item h3{margin:0 0 6px;font-size:1.18rem;line-height:1.3;font-weight:700;letter-spacing:-.02em}
 .item p{margin:0 0 10px}
@@ -398,6 +398,11 @@ function rutaImagen(v){
   const m = v.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
   return m ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1200` : v;
 }
+/* Opciones de la pregunta. Admite la columna «opciones» separada con | o las columnas opcion_1 a opcion_4. */
+function opcionesDe(f){
+  if(f.opciones) return String(f.opciones).split("|").map(o => o.trim()).filter(Boolean);
+  return [f.opcion_1, f.opcion_2, f.opcion_3, f.opcion_4].map(o => String(o||"").trim()).filter(Boolean);
+}
 function itemHTML(f, s, H){
   const chips = [];
   const fl = fecha(f.fecha_limite), fe = fecha(f.fecha);
@@ -409,8 +414,8 @@ function itemHTML(f, s, H){
   if(f.nodo) chips.push(`<span class="chip nodo" title="Nodo del Sello Transformador">${esc(f.nodo)}</span>`);
   const cal = enlaceCalendario(f);
   let quiz = "";
-  if(f.pregunta && f.opciones){
-    const ops = String(f.opciones).split("|").map(o => o.trim()).filter(Boolean);
+  const ops = opcionesDe(f);
+  if(f.pregunta && ops.length){
     quiz = `<div class="quiz" data-r="${esc(f.respuesta)}" data-e="${esc(f.explicacion)}"><p class="q">${esc(f.pregunta)}</p><div class="opciones">${ops.map((o,i)=>`<button type="button" class="op" data-i="${i+1}">${esc(o)}</button>`).join("")}</div><p class="explica" aria-live="polite"></p></div>`;
   }
   const img = rutaImagen(f.imagen);
@@ -435,7 +440,7 @@ function limpiarHTML(s){
 }
 
 function activarQuiz(q){
-  const r = q.dataset.r, e = q.dataset.e, out = q.querySelector(".explica");
+  const r = String(parseInt(q.dataset.r,10)), e = q.dataset.e, out = q.querySelector(".explica");
   q.querySelectorAll(".op").forEach(b => b.addEventListener("click", () => {
     const ok = b.dataset.i === r;
     q.querySelectorAll(".op").forEach(x => { x.disabled = true; if(x.dataset.i===r) x.classList.add("bien"); });
@@ -530,7 +535,8 @@ function revisar(filas){
       else if(!/^https?:/.test(f.imagen) && !/\.(jpe?g|png|webp)$/i.test(f.imagen)) avisos.push(["alerta", `${n}: la imagen debe ser JPG, PNG o WEBP.`]);
     }
     if(f.nodo && !NODOS.includes(f.nodo)) avisos.push(["alerta", `${n}: «${f.nodo}» no es un nodo del Sello Transformador.`]);
-    if(f.pregunta && f.respuesta && !(f.opciones||"").split("|")[+f.respuesta-1]) avisos.push(["alerta", `${n}: el número de respuesta no corresponde a ninguna opción.`]);
+    if(f.pregunta && opcionesDe(f).length < 2) avisos.push(["alerta", `${n}: la pregunta necesita al menos dos opciones.`]);
+    if(f.pregunta && f.respuesta && !opcionesDe(f)[+f.respuesta-1]) avisos.push(["alerta", `${n}: el número de respuesta no corresponde a ninguna opción.`]);
   });
   const ok = filas.filter(f => String(f.estado).toLowerCase()==="aprobado").length;
   avisos.unshift(["ok", `${ok} filas aprobadas listas para publicar, ${filas.length-ok} en borrador.`]);
