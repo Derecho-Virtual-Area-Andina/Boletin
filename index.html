@@ -102,6 +102,7 @@ a{color:inherit}
 .item{overflow:hidden}
 .foto{margin:-16px -16px 14px;background:var(--suave)}
 .foto img{display:block;width:100%;height:auto;max-height:620px;object-fit:contain;margin:0 auto}
+.foto a{display:block}
 .foto figcaption{font-size:.78rem;color:var(--tinta-2);padding:6px 16px 0}
 .item h3{margin:0 0 6px;font-size:1.18rem;line-height:1.3;font-weight:700;letter-spacing:-.02em}
 .item p{margin:0 0 10px}
@@ -420,7 +421,8 @@ function itemHTML(f, s, H){
     quiz = `<div class="quiz" data-r="${esc(f.respuesta)}" data-e="${esc(f.explicacion)}"><p class="q">${esc(f.pregunta)}</p><div class="opciones">${ops.map((o,i)=>`<button type="button" class="op" data-i="${i+1}">${esc(o)}</button>`).join("")}</div><p class="explica" aria-live="polite"></p></div>`;
   }
   const img = rutaImagen(f.imagen);
-  const foto = img ? `<figure class="foto"><img src="${esc(img)}" alt="${esc(f.imagen_alt||"")}" loading="lazy" decoding="async" onerror="this.closest('figure').remove()">${f.imagen_credito?`<figcaption>${esc(f.imagen_credito)}</figcaption>`:""}</figure>` : "";
+  const imgTag = `<img src="${esc(img)}" alt="${esc(f.imagen_alt||"")}" loading="lazy" decoding="async" onerror="this.closest('figure').remove()">`;
+  const foto = img ? `<figure class="foto">${f.enlace ? `<a href="${esc(f.enlace)}" target="_blank" rel="noopener">${imgTag}</a>` : imgTag}${f.imagen_credito?`<figcaption>${esc(f.imagen_credito)}</figcaption>`:""}</figure>` : "";
   return `<article class="item" id="item-${esc(f.numero)}-${s.id}-${esc(f.orden)}">
     ${foto}
     <h3>${esc(f.titular)}</h3>
