@@ -428,7 +428,7 @@ function itemHTML(f, s, H){
     <h3>${esc(f.titular)}</h3>
     ${f.fuente?`<p class="fuente">${esc(f.fuente)}</p>`:""}
     ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
-    <p>${esc(f.sintesis)}</p>
+    ${String(f.sintesis||"").replace(/\r/g,"").split(/\n\s*\n/).map(t=>`<p>${esc(t.trim())}</p>`).join("")}
     ${f.desarrollo?`<details class="desarrollo"><summary>Leer el análisis</summary><div class="cuerpo">${limpiarHTML(f.desarrollo)}</div></details>`:""}
     ${quiz}
     ${(f.enlace||cal)?`<div class="acciones">${f.enlace?`<a class="boton" href="${esc(f.enlace)}" target="_blank" rel="noopener">${esc(f.texto_boton||"Abrir")}</a>`:""}${cal?`<a class="boton sec" href="${cal}" target="_blank" rel="noopener">Agregar a mi calendario</a>`:""}</div>`:""}
