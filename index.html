@@ -610,6 +610,34 @@ $("#selectorNum").addEventListener("change", e => {
   render(lista.includes(pedido) ? pedido : lista[0]);
 })();
 
+/* Avance automático del carrusel cada 5 s. Se pausa con el cursor encima, con el foco del teclado,
+   cuando el carrusel no está en pantalla o la pestaña está oculta, y se detiene si la persona lo mueve a mano.
+   No corre si el sistema pide reducir el movimiento. */
+const CARRUSEL_SEG = 5;
+function iniciarCarruseles(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.querySelectorAll(".carrusel").forEach(car=>{
+    if(car.dataset.auto) return; car.dataset.auto = "1";
+    const pista = car.querySelector(".pista");
+    let visible = false, pausa = false, detenido = false;
+    const parar = ()=>{ detenido = true; };
+    car.addEventListener("mouseenter", ()=>pausa = true);
+    car.addEventListener("mouseleave", ()=>pausa = false);
+    car.addEventListener("focusin", ()=>pausa = true);
+    car.addEventListener("focusout", ()=>pausa = false);
+    car.addEventListener("pointerdown", parar);
+    car.addEventListener("click", e=>{ if(e.isTrusted && e.target.closest(".car-btn, .punto")) parar(); });
+    new IntersectionObserver(es=>{ visible = es[0].isIntersecting; }, {threshold:.5}).observe(car);
+    setInterval(()=>{
+      if(detenido || pausa || !visible || document.hidden) return;
+      const n = pista.children.length; if(n < 2) return;
+      const w = pista.clientWidth, i = Math.round(pista.scrollLeft / w);
+      pista.scrollTo({left: ((i + 1) % n) * w});
+    }, CARRUSEL_SEG * 1000);
+  });
+}
+new MutationObserver(iniciarCarruseles).observe(document.body, {childList:true, subtree:true});
+iniciarCarruseles();
 /* Carrusel de imágenes: flechas, puntos y sincronía al deslizar con el dedo. */
 document.addEventListener("click", e=>{
   const b = e.target.closest(".car-btn, .punto"); if(!b) return;
